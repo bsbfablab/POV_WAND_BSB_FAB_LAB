@@ -671,9 +671,9 @@ const boolean letterZ[] PROGMEM = {
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };
 
-  void sendToWand(boolean letterArray[]){//function to get array data
-    
-  for (t=0; t<12; t++){ //for each time step
+void sendToWand(boolean letterArray[]) //function to get array data
+{
+    for (t=0; t<12; t++){ //for each time step
 
   for (l=0; l<6; l++){ //for first six rows of data
     data1 = data1 << 1;//bitwise shift left
@@ -697,7 +697,7 @@ const boolean letterZ[] PROGMEM = {
   data2=0;
   data3=0;
   }
-  }
+}
   
   void sendToWandMW(boolean letterArray[]){//M and W are extra wide- they have a special function to get array data (with 15 time steps instead of 12)
     
@@ -716,6 +716,8 @@ const boolean letterZ[] PROGMEM = {
     data3 = data3 << 1;//bitwise shift left
     data3 |= pgm_read_byte_near(letterArray + (l*15+t));//add next value from dataset
   }
+  
+  
   //SET PINS:
   PORTB = data1;
   PORTD = data2;
@@ -727,89 +729,22 @@ const boolean letterZ[] PROGMEM = {
   data3=0;
   }
   }
-  
-  
-  
-  // //SAME AS ABOVE BUT WRITTEN USING ARDUINO LIBRARY COMMANDS:
-// 
-//// for (t=0; t<12; t++){ //for each time step of matrix
-//// 
-//// for (int pin= 13; pin>=0; pin--) {//this loop sets digital pins 0-13 either high or low depending on the value of the corresponding matrix element
-////   if (letterArray[(13-pin)*12+t]) {//if matrix element == 1 then turn led on
-////     digitalWrite(pin, HIGH);
-////   }
-////   else {//if matrix element == 0 then turn led off
-////     digitalWrite(pin, LOW);
-////   }
-//// }
-//// 
-//// //the following lines address the analog pins indivially and set them either high or low depending on matrix element
-//// if (letterArray[14*12+t]) {//if matrix element == 1 then turn led on
-////   digitalWrite(A5, HIGH);
-//// }
-//// else {//if matrix element == 0 then turn led off
-////   digitalWrite(A5, LOW);
-//// }
-//// if (letterArray[15*12+t]) {
-////   digitalWrite(A4, HIGH);
-//// }
-//// else {
-////   digitalWrite(A4, LOW);
-//// }
-//// if (letterArray[16*12+t]) {
-////   digitalWrite(A3, HIGH);
-//// }
-//// else {
-////   digitalWrite(A3, LOW);
-//// }
-//// if (letterArray[17*12+t]) {
-////   digitalWrite(A2, HIGH);
-//// }
-//// else {
-////   digitalWrite(A2, LOW);
-//// } 
-//// if (letterArray[18*12+t]) {
-////   digitalWrite(A1, HIGH);
-//// }
-//// else {
-////   digitalWrite(A1, LOW);
-//// }
-//// if (letterArray[19*12+t]) {
-////   digitalWrite(A0, HIGH);
-//// }
-//// else {
-////   digitalWrite(A0, LOW);
-//// }
-////
-////
-//// delay(refreshrate);//delay after each column of data is displayed
-//// }//go to next time step
-  
- 
-
-
 
 
 void setup() {
-  
-  
-
- //port/pin assignments- set all pins to output- more info here: http://www.arduino.cc/en/Reference/PortManipulation
-  DDRB = 0xFF;//port b- digital pins 8-13
-  DDRC = 0xFF;//port c- anlog pins 0-5
-  DDRD = 0xFF;//port d- digital pins 0-7
-  
+   
 //the three lines above are the same as setting all pins as outputs using arduino library:
-//  pinMode(A0, OUTPUT);
-//  pinMode(A1, OUTPUT);
-//  pinMode(A2, OUTPUT);
-//  pinMode(A3, OUTPUT);
-//  pinMode(A4, OUTPUT);
-//  pinMode(A5, OUTPUT);
-//  
-//  for (int pin=0; pin<14; pin++){
-//    pinMode(pin, OUTPUT);
-//  }
+  pinMode(A0, OUTPUT);
+  pinMode(A1, OUTPUT);
+  pinMode(A2, OUTPUT);
+  pinMode(A3, OUTPUT);
+  pinMode(A4, OUTPUT);
+  pinMode(A5, OUTPUT);
+  
+  for (int pin=0; pin<14; pin++)
+  {
+    pinMode(pin, OUTPUT);
+  }
   
   
    
