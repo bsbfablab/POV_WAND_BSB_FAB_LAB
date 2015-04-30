@@ -16,26 +16,25 @@
  * GNU General Public License for more details.
 */
 
-//in most of this code I have used the arduino portpin assignments to send data to pins, you can read more about how that works here: http://www.arduino.cc/en/Reference/PortManipulation
-//I've also included (and commented) the standard arduino library commands that perform the same functions and the port commands in case you are interested
+//Na maior parte desse código, foram usados métodos de manipulação de porta para controlar saidas digitais: http://www.arduino.cc/en/Reference/PortManipulation
 
 
-#include <avr/pgmspace.h>//need to store letter arrays in flash memory- or else we run out of space, more info here: http://arduino.cc/en/Reference/PROGMEM
+#include <avr/pgmspace.h>//Para que não fiquemos sem memória, precisamos guardar as letras na memória flash. Portanto usaremos a biblioteca PROGMEM. Mais informações: http://arduino.cc/en/Reference/PROGMEM
 
 
-/*******************************************************************************
-THIS NEXT SECTION IS WHAT YOU'LL WANT TO EDIT TO CREATE YOUR OWN MESSAGES
-*******************************************************************************/
-// setup
-String povtext = "OVO";//PUT YOUR MESSAGE HERE!!- must be in all caps, spaces are fine, no punctuation
-byte refreshrate = 3;//delay time for pixels to refresh in milliseconds- experiment with different values
+/******************************************************************
+Essa é a seção que vc precisa editar para modificar suas mensagens
+*******************************************************************/
+// Configuração
+String povtext = "OVO";//COLOQUE SUA MENSAGEM AQUI!!- Todo o texto deve estar em caixa alta "Caps-lock", espaços sao aceitos, pontuacao ou acentos nao
+byte refreshrate = 3;//tempo de delay entre pixels, experimente com diferentes valores
 
 
 
- //get length of string povtext
+//Armazena o comprimento do texto a ser desenhado em uma variável
 int dimtext = povtext.length();
 
-//letterArray to make sure firmare is loaded correctly- each led should light up in order upon turning on
+//Armazena a "imagem" que é mostrada na inicializacao. Todos os leds devem acender, um a um, em ordem.
 boolean load[]= {
 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -60,19 +59,19 @@ boolean load[]= {
 };
 
 
-//incoming data storage
-byte data1 = 0;//for portB
-byte data2 = 0;//for portC
-byte data3 = 0;//for portD
+//Variaveis para armazenamento dos dados a serem mostrados nos leds
+byte data1 = 0;//Para portB
+byte data2 = 0;//Para portC
+byte data3 = 0;//Para portD
 
-//variables
-byte n; //variable for loops
-byte t; //variable for loops
-byte l; //variable for loops
+//Variaveis diversas
+byte n; //Variavel a ser usada em loops
+byte t; //Variavel a ser usada em loops
+byte l; //Variavel a ser usada em loops
 
 
 
-//The letters of the alphabet- edit the look of these if you want, just make sure the letters m and w are 15 pixels wide and the rest are 12 pixels
+// As letras do alfabeto. Sinta-se a vontade para editar o visual dessas fontes se desejar, apenas garante que as letras M e W tem 15 pixels de largura e as demais 12. 1 = led ligado; 0 = led desligado
 const boolean letterA[] PROGMEM = {
   0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
   0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0,
@@ -671,69 +670,74 @@ const boolean letterZ[] PROGMEM = {
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };
 
-void sendToWand(boolean letterArray[]) //function to get array data
+//funcao que recebe uma variável contendo uma letra e a exibe nos leds, coluna por coluna
+void sendToWand(boolean letterArray[]) 
 {
-    for (t=0; t<12; t++){ //for each time step
-
-  for (l=0; l<6; l++){ //for first six rows of data
-    data1 = data1 << 1;//bitwise shift left
-    data1 |= pgm_read_byte_near(letterArray + (l*12+t));//add next value from dataset
-  }
-  for (l=6; l<14; l++){ //for next eight rows of data
-    data2 = data2 << 1;//bitwise shift left
-    data2 |= pgm_read_byte_near(letterArray + (l*12+t));//add next value from dataset
-  }
-  for (l=14; l<20; l++){ //for next six rows of data
-    data3 = data3 << 1;//bitwise shift left
-    data3 |= pgm_read_byte_near(letterArray + (l*12+t));//add next value from dataset
-  }
-  //SET PINS:
-  PORTB = data1;
-  PORTD = data2;
-  PORTC = data3;
-  delay(refreshrate);
-  //clear data storage
-  data1=0;
-  data2=0;
-  data3=0;
+    for (t=0; t<12; t++)  //Para cada coluna
+    {
+      for (l=0; l<6; l++) //Pelas primeiras 6 linhas
+      { 
+        data1 = data1 << 1;//Desloque os bits para a esquerda
+        data1 |= pgm_read_byte_near(letterArray + (l*12+t));//Adicione o proximo valor a partir da variavel contendo a letra
+      }
+      for (l=6; l<14; l++) //Das linhas 6 a 14
+      { 
+        data2 = data2 << 1;//Desloque os bits para a esquerda
+        data2 |= pgm_read_byte_near(letterArray + (l*12+t));//Adicione o proximo valor a partir da variavel contendo a letra
+      }
+      for (l=14; l<20; l++) //Pelas proximas linhas
+      { 
+        data3 = data3 << 1;//Desloque os bits para a esquerda
+        data3 |= pgm_read_byte_near(letterArray + (l*12+t));//Adicione o proximo valor a partir da variavel contendo a letra
+      }
+    //Coloque os valores nos registradores corretos.
+    PORTB = data1;
+    PORTD = data2;
+    PORTC = data3;
+    delay(refreshrate); // Aguarda o tempo necessario para que o pixel tenha a largura desejada
+    //Limpa as variaveis que armazenam os pixels
+    data1=0;
+    data2=0;
+    data3=0;
   }
 }
   
-  void sendToWandMW(boolean letterArray[]){//M and W are extra wide- they have a special function to get array data (with 15 time steps instead of 12)
+void sendToWandMW(boolean letterArray[]) //M e W sao maiores. criamos uma funcao especial para tratar as variaveis com 15 pixels de largura
+{
     
-  //send data to leds via port/pin manipulation
-  for (t=0; t<15; t++){ //for each time step
+  for (t=0; t<15; t++){ //Para cada coluna
 
-  for (l=0; l<6; l++){ //for first six rows of data
-    data1 = data1 << 1;//bitwise shift left
-    data1 |= pgm_read_byte_near(letterArray + (l*15+t));//add next value from dataset
-  }
-  for (l=6; l<14; l++){ //for next eight rows of data
-    data2 = data2 << 1;//bitwise shift left
-    data2 |= pgm_read_byte_near(letterArray + (l*15+t));//add next value from dataset
-  }
-  for (l=14; l<20; l++){ //for next six rows of data
-    data3 = data3 << 1;//bitwise shift left
-    data3 |= pgm_read_byte_near(letterArray + (l*15+t));//add next value from dataset
-  }
-  
-  
-  //SET PINS:
-  PORTB = data1;
-  PORTD = data2;
-  PORTC = data3;
-  delay(refreshrate);
-  //clear data storage
-  data1=0;
-  data2=0;
-  data3=0;
-  }
+    for (l=0; l<6; l++) //Pelas primeiras 6 linhas
+          { 
+            data1 = data1 << 1;//Desloque os bits para a esquerda
+            data1 |= pgm_read_byte_near(letterArray + (l*12+t));//Adicione o proximo valor a partir da variavel contendo a letra
+          }
+          for (l=6; l<14; l++) //Das linhas 6 a 14
+          { 
+            data2 = data2 << 1;//Desloque os bits para a esquerda
+            data2 |= pgm_read_byte_near(letterArray + (l*12+t));//Adicione o proximo valor a partir da variavel contendo a letra
+          }
+          for (l=14; l<20; l++) //Pelas proximas linhas
+          { 
+            data3 = data3 << 1;//Desloque os bits para a esquerda
+            data3 |= pgm_read_byte_near(letterArray + (l*12+t));//Adicione o proximo valor a partir da variavel contendo a letra
+          }
+    //Coloque os valores nos registradores corretos.
+    PORTB = data1;
+    PORTD = data2;
+    PORTC = data3;
+    delay(refreshrate); // Aguarda o tempo necessario para que o pixel tenha a largura desejada
+    //Limpa as variaveis que armazenam os pixels
+    data1=0;
+    data2=0;
+    data3=0;
+
   }
 
-
+}
 void setup() {
    
-//the three lines above are the same as setting all pins as outputs using arduino library:
+//Configura os pinos de entrada analogica como saida digital
   pinMode(A0, OUTPUT);
   pinMode(A1, OUTPUT);
   pinMode(A2, OUTPUT);
@@ -741,68 +745,68 @@ void setup() {
   pinMode(A4, OUTPUT);
   pinMode(A5, OUTPUT);
   
+//Os pinos digitais podem ser inicializados em um loop
   for (int pin=0; pin<14; pin++)
   {
     pinMode(pin, OUTPUT);
   }
   
+
+//Liga todos os leds usando a biblioteca padrao do arduino
+  for (int pin= 13; pin>=0; pin--){//Liga todos os leds do arduino sequencialmente
+    digitalWrite(pin, HIGH);
+    delay(100);
+    digitalWrite(pin,LOW);
+  }
+  //the following lines turn on each analog pin individually
+  digitalWrite(A5, HIGH);
+  delay(100);
+  digitalWrite(A5,LOW);
+  digitalWrite(A4, HIGH);
+  delay(100);
+  digitalWrite(A4,LOW);
+  digitalWrite(A3, HIGH);
+  delay(100);
+  digitalWrite(A3,LOW);
+  digitalWrite(A2, HIGH);
+  delay(100);
+  digitalWrite(A2,LOW);
+  digitalWrite(A1, HIGH);
+  delay(100);
+  digitalWrite(A1,LOW);
+  digitalWrite(A0, HIGH);
+  delay(100);
+  digitalWrite(A0,LOW);
+
   
    
- //run intialization so we know device is working- leds should light up in order from top of wand to bottom
- for (byte j=0; j<20; j++){ //for each time step
+ //Executa rotina de inicializacao usando acesso direto as portas
+ for (byte j=0; j<20; j++){ //Para cada coluna da rotina de inicializacao
 
-  for (byte i=0; i<6; i++){ //for first six rows of data
-    data1 = data1 << 1;//bitwise shift left
-    data1 |= load[(i*20+j)];//add next value from dataset
+  for (byte i=0; i<6; i++){ //Pelas primeiras 6 colunas
+    data1 = data1 << 1;//Desloca os bits para a esquerda
+    data1 |= load[(i*20+j)];//Adiciona um valor do dataset
   }
-  for (byte i=6; i<14; i++){ //for next eight rows of data
-    data2 = data2 << 1;//bitwise shift left
-    data2 |= load[(i*20+j)];//add next value from dataset
+  for (byte i=6; i<14; i++){ //pelas proximas 8 colunas
+    data2 = data2 << 1;//Desloca os bits para a esquerda
+    data2 |= load[(i*20+j)];//Adiciona um valor do dataset
   }
-  for (byte i=14; i<20; i++){ //for next six rows of data
-    data3 = data3 << 1;//bitwise shift left
-    data3 |= load[(i*20+j)];//add next value from dataset
+  for (byte i=14; i<20; i++){ //Pelas proximas 6 colunas
+    data3 = data3 << 1;//Desloca os bits para a esquerda
+    data3 |= load[(i*20+j)];//Adiciona um valor do dataset
   }
   PORTB = data1;
   PORTD = data2;
   PORTC = data3;
-  delay(100);
+  delay(100); //Longo delay para animação ser perceptivel
   
  }
 
-////SAME AS ABOVE LOOP, BUT USING ARDUINO LIBRARY:
-// //turn on each LED one by one using arduino library commands
-//  for (int pin= 13; pin>=0; pin--){//turn on each digital pin sequentially for 100ms
-//    digitalWrite(pin, HIGH);
-//    delay(100);
-//    digitalWrite(pin,LOW);
-//  }
-//  //the following lines turn on each analog pin individually
-//  digitalWrite(A5, HIGH);
-//  delay(100);
-//  digitalWrite(A5,LOW);
-//  digitalWrite(A4, HIGH);
-//  delay(100);
-//  digitalWrite(A4,LOW);
-//  digitalWrite(A3, HIGH);
-//  delay(100);
-//  digitalWrite(A3,LOW);
-//  digitalWrite(A2, HIGH);
-//  delay(100);
-//  digitalWrite(A2,LOW);
-//  digitalWrite(A1, HIGH);
-//  delay(100);
-//  digitalWrite(A1,LOW);
-//  digitalWrite(A0, HIGH);
-//  delay(100);
-//  digitalWrite(A0,LOW);
-
-
- //clear data storage
+ //Limpa as variaveis
  data1 = 0;
  data2 = 0;
  data3 = 0;
- //clear ports- set all arduino pins to 0Volts
+ //Configura todas as portas do arduino para 0volts
  PORTB = data1;
  PORTD = data2;
  PORTC = data3;
@@ -813,13 +817,14 @@ void setup() {
 
 void loop() {
   
-  //space at beginning of text
+  //Adiciona um espaco no inicio do texto, mantendo todas as saidas do arduino em 0volts
    PORTB = 0;
    PORTD = 0;
    PORTC = 0;
    delay(refreshrate*3);
   
-  for (n=0; n<dimtext; n++) {//go through each character of povtext and call function sendToWand to display letter
+  for (n=0; n<dimtext; n++) //Percorre todos os caracteres do texto e usa a funcao sendtoWand para exibir nos leds
+  {
     if (povtext.charAt(n)=='A') {
       sendToWand((bool*)letterA);
       }
@@ -902,20 +907,20 @@ void loop() {
       PORTB = 0;
       PORTD = 0;
       PORTC = 0;
-   delay(refreshrate*3);//off for 3 pixels
+   delay(refreshrate*3);//Passa 3 pixels desligado
     }
-    //space between each character
+    //Espaco entre cara caractere
     PORTB = 0;
     PORTD = 0;
     PORTC = 0;
-   delay(refreshrate);
+   delay(refreshrate);// Delay necessario para que o espaco seja perceptivel
   }
   
-  //space at end of text
+  //Espaco no fim do texto 
    PORTB = 0;
    PORTD = 0;
    PORTC = 0;
-   delay(refreshrate*3);
+   delay(refreshrate*3); // Delay necessario para que o espaco seja perceptivel
  
  
  
